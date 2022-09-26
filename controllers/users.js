@@ -30,6 +30,12 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
+    .orFail(() => {
+      const err = new Error();
+      err.name = 'CastError';
+      err.statusCode = 404;
+      throw err;
+    })
     .then((user) => {
       res.send({
         name: user.name,

@@ -3,19 +3,15 @@ const Card = require('../models/card');
 const errorHandler = (err, res) => {
   if (err.name === 'ValidationError') {
     return res.status(400).send({
-      error: err.name,
       message: 'Переданы некорректные данные.',
     });
   }
   if (err.name === 'CastError') {
     return res.status(404).send({
-      error: err.name,
       message: 'Карточка с указанным _id не найдена.',
     });
   }
-  return res
-    .status(500)
-    .send({ error: err.name, message: 'Ошибка по умолчанию' });
+  return res.status(500).send({ message: 'Ошибка по умолчанию' });
 };
 
 module.exports.getCards = (req, res) => {
@@ -48,6 +44,12 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
+    .orFail(() => {
+      const err = new Error();
+      err.name = 'CastError';
+      err.statusCode = 404;
+      throw err;
+    })
     .then((card) => {
       res.send({
         name: card.name,
@@ -67,6 +69,12 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true, runValidators: true, upsert: true },
   )
+    .orFail(() => {
+      const err = new Error();
+      err.name = 'CastError';
+      err.statusCode = 404;
+      throw err;
+    })
     .populate(['owner', 'likes'])
     .then((card) => {
       res.send({
@@ -88,6 +96,13 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true, runValidators: true, upsert: true },
   )
+    .orFail(() => {
+      const err = new Error();
+      err.name = 'CastError';
+      err.statusCode = 404;
+      throw err;
+    })
+    .populate(['owner', 'likes'])
     .then((card) => {
       res.send({
         name: card.name,
