@@ -1,17 +1,22 @@
 const Card = require('../models/card');
+const mongoose = require('mongoose');
+
+const INPUT_ERROR_CODE = 400;
+const NOT_FOUND_ERROR_CODE = 404;
+const ERROR_CODE = 500;
 
 const errorHandler = (err, res) => {
   if (err.name === 'ValidationError') {
-    return res.status(400).send({
+    return res.status(INPUT_ERROR_CODE).send({
       message: 'Переданы некорректные данные.',
     });
   }
   if (err.name === 'CastError') {
-    return res.status(404).send({
+    return res.status(NOT_FOUND_ERROR_CODE).send({
       message: 'Карточка с указанным _id не найдена.',
     });
   }
-  return res.status(500).send({ message: 'Ошибка по умолчанию' });
+  return res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
 };
 
 module.exports.getCards = (req, res) => {
@@ -43,24 +48,56 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .orFail(() => {
-      const err = new Error();
-      err.name = 'CastError';
-      err.statusCode = 404;
-      throw err;
-    })
-    .then((card) => {
-      res.send({
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-        _id: card._id,
+  if (mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+    //   Card.findById(id)
+    //   .orFail(() => {
+
+    //   })
+    //   .then((card) => Card.deleteOne(card)
+    //     .then(() => res.send({           name: card.name,
+    //       link: card.link,
+    //       owner: card.owner,
+    //       _id: card._id,
+    // }))
+
+    // if (err.name === 'CastError') {
+    //   // Невалидный идентификатор карточки
+    // } else if (err.statusCode === 404) {
+    //  // нет карточки
+    // } else {
+    //  // дефолтная ошибка
+    // }
+
+    Card.findByIdAndRemove(req.params.cardId)
+      .orFail(() => {
+        // const err = new Error();
+        // err.name = 'CastError';
+        // err.statusCode = 404;
+        // throw err;
+        res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Переданы некорректные данные.' });
+      })
+      .then((card) => {
+        res.send({
+          name: card.name,
+          link: card.link,
+          owner: card.owner,
+          _id: card._id,
+        });
+      })
+      .catch((err) => {
+        errorHandler(err, res);
       });
-    })
-    .catch((err) => {
-      errorHandler(err, res);
-    });
+  } else {
+    // const err = new Error();
+    // err.name = 'ValidationError';
+    // errorHandler(err, res);
+    // throw err;
+    res
+      .status(INPUT_ERROR_CODE)
+      .send({ message: 'Переданы некорректные данные.' });
+  }
 };
 
 module.exports.likeCard = (req, res) => {
