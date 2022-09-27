@@ -4,28 +4,14 @@ const INPUT_ERROR_CODE = 400;
 const NOT_FOUND_ERROR_CODE = 404;
 const ERROR_CODE = 500;
 
-const errorHandler = (err, res) => {
-  if (err.name === 'ValidationError') {
-    return res.status(INPUT_ERROR_CODE).send({
-      message: 'Переданы некорректные данные.',
-    });
-  }
-  if (err.name === 'CastError') {
-    return res.status(NOT_FOUND_ERROR_CODE).send({
-      message: 'Пользователь с указанным _id не найден.',
-    });
-  }
-  return res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
-};
-
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => {
       res.send({ users });
     })
-    .catch(() =>
-      res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' }),
-    );
+    .catch(() => {
+      res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
+    });
 };
 
 module.exports.getUserById = (req, res) => {
@@ -92,10 +78,11 @@ module.exports.updateUser = (req, res) => {
           avatar: user.avatar,
           _id: user._id,
         });
+      } else {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь с указанным _id не найден.' });
       }
-      return res
-        .status(NOT_FOUND_ERROR_CODE)
-        .send({ message: 'Пользователь с указанным _id не найден.' });
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -122,10 +109,11 @@ module.exports.updateAvatar = (req, res) => {
           avatar: user.avatar,
           _id: user._id,
         });
+      } else {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь с указанным _id не найден.' });
       }
-      return res
-        .status(NOT_FOUND_ERROR_CODE)
-        .send({ message: 'Пользователь с указанным _id не найден.' });
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
