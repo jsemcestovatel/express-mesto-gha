@@ -29,7 +29,6 @@ module.exports.createCard = (req, res) => {
       });
     })
     .catch((err) => {
-      console.log(err.name);
       if (err.name === 'ValidationError') {
         res.status(INPUT_ERROR_CODE).send({
           message: 'Переданы некорректные данные.',
