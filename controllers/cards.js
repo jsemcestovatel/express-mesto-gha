@@ -40,21 +40,22 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
+    .orFail(() => {
+      res
+        .status(NOT_FOUND_ERROR_CODE)
+        .send({ message: 'Карточка с указанным _id не найдена.' });
+    })
     .then((card) => {
-      if (card) {
-        return res.send({
+      Card.deleteOne(card).then(() => {
+        res.send({
           name: card.name,
           link: card.link,
           owner: card.owner,
           _id: card._id,
           likes: card.likes,
         });
-      } else {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
-      }
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -68,15 +69,6 @@ module.exports.deleteCard = (req, res) => {
 
 // if (mongoose.Types.ObjectId.isValid(req.params.cardId)) {
 // }
-//   Card.findById(id)
-//   .orFail(() => {
-//   })
-//   .then((card) => Card.deleteOne(card)
-//     .then(() => res.send({           name: card.name,
-//       link: card.link,
-//       owner: card.owner,
-//       _id: card._id,
-// }))
 // if (err.name === 'CastError') {
 //   // Невалидный идентификатор карточки
 // } else if (err.statusCode === 404) {
@@ -93,19 +85,19 @@ module.exports.likeCard = (req, res) => {
   )
     .populate(['owner', 'likes'])
     .then((card) => {
-      if (card) {
-        return res.send({
-          name: card.name,
-          link: card.link,
-          owner: card.owner,
-          _id: card._id,
-          likes: card.likes,
-        });
-      } else {
-        return res
+      if (!card) {
+        res
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: 'Карточка с указанным _id не найдена.' });
+        return;
       }
+      res.send({
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+        _id: card._id,
+        likes: card.likes,
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -125,19 +117,19 @@ module.exports.dislikeCard = (req, res) => {
   )
     .populate(['owner', 'likes'])
     .then((card) => {
-      if (card) {
-        return res.send({
-          name: card.name,
-          link: card.link,
-          owner: card.owner,
-          _id: card._id,
-          likes: card.likes,
-        });
-      } else {
-        return res
+      if (!card) {
+        res
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: 'Карточка с указанным _id не найдена.' });
+        return;
       }
+      res.send({
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+        _id: card._id,
+        likes: card.likes,
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
