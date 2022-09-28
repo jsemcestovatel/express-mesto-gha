@@ -58,7 +58,6 @@ module.exports.deleteCard = (req, res) => {
       });
     })
     .catch((err) => {
-      console.log(err.name);
       if (err.name === 'NotValidID') {
         return res
           .status(NOT_FOUND_ERROR_CODE)
@@ -74,28 +73,35 @@ module.exports.deleteCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-    { new: true, runValidators: true, upsert: true },
-  )
-    .populate(['owner', 'likes'])
+  Card.findById(req.params.cardId)
+    .orFail(() => {
+      const err = new Error();
+      err.name = 'NotValidID';
+      throw err;
+    })
     .then((card) => {
-      if (!card) {
-        res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
-        return;
-      }
-      res.send({
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-        _id: card._id,
-        likes: card.likes,
-      });
+      Card.findByIdAndUpdate(
+        card,
+        { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+        { new: true, runValidators: true },
+      )
+        .populate(['owner', 'likes'])
+        .then(() => {
+          res.send({
+            name: card.name,
+            link: card.link,
+            owner: card.owner,
+            _id: card._id,
+            likes: card.likes,
+          });
+        });
     })
     .catch((err) => {
+      if (err.name === 'NotValidID') {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Карточка с указанным _id не найдена.' });
+      }
       if (err.name === 'CastError') {
         return res
           .status(INPUT_ERROR_CODE)
@@ -104,30 +110,36 @@ module.exports.likeCard = (req, res) => {
       return res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
     });
 };
-
 module.exports.dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } }, // убрать _id из массива
-    { new: true, runValidators: true, upsert: true },
-  )
-    .populate(['owner', 'likes'])
+  Card.findById(req.params.cardId)
+    .orFail(() => {
+      const err = new Error();
+      err.name = 'NotValidID';
+      throw err;
+    })
     .then((card) => {
-      if (!card) {
-        res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
-        return;
-      }
-      res.send({
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-        _id: card._id,
-        likes: card.likes,
-      });
+      Card.findByIdAndUpdate(
+        card,
+        { $pull: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+        { new: true, runValidators: true },
+      )
+        .populate(['owner', 'likes'])
+        .then(() => {
+          res.send({
+            name: card.name,
+            link: card.link,
+            owner: card.owner,
+            _id: card._id,
+            likes: card.likes,
+          });
+        });
     })
     .catch((err) => {
+      if (err.name === 'NotValidID') {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Карточка с указанным _id не найдена.' });
+      }
       if (err.name === 'CastError') {
         return res
           .status(INPUT_ERROR_CODE)
