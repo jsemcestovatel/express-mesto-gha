@@ -42,12 +42,12 @@ module.exports.createCard = (req, res) => {
 module.exports.deleteCard = (req, res) => {
   Card.findById(req.params.cardId)
     .orFail(() => {
-      res
-        .status(NOT_FOUND_ERROR_CODE)
-        .send({ message: 'Карточка с указанным _id не найдена.' });
+      const err = new Error();
+      err.name = 'NotValidID';
+      throw err;
     })
     .then((card) => {
-      Card.deleteOne(card).then(() => {
+      Card.findOneAndDelete(card).then(() => {
         res.send({
           name: card.name,
           link: card.link,
@@ -58,6 +58,12 @@ module.exports.deleteCard = (req, res) => {
       });
     })
     .catch((err) => {
+      console.log(err.name);
+      if (err.name === 'NotValidID') {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Карточка с указанным _id не найдена.' });
+      }
       if (err.name === 'CastError') {
         return res
           .status(INPUT_ERROR_CODE)
@@ -66,16 +72,6 @@ module.exports.deleteCard = (req, res) => {
       return res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
     });
 };
-
-// if (mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-// }
-// if (err.name === 'CastError') {
-//   // Невалидный идентификатор карточки
-// } else if (err.statusCode === 404) {
-//  // нет карточки
-// } else {
-//  // дефолтная ошибка
-// }
 
 module.exports.likeCard = (req, res) => {
   Card.findByIdAndUpdate(
