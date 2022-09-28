@@ -71,18 +71,18 @@ module.exports.updateUser = (req, res) => {
     { new: true, runValidators: true, upsert: true },
   )
     .then((user) => {
-      if (user) {
-        return res.send({
-          name: user.name,
-          about: user.about,
-          avatar: user.avatar,
-          _id: user._id,
-        });
-      } else {
-        return res
+      if (!user) {
+        res
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: 'Пользователь с указанным _id не найден.' });
+        return;
       }
+      res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        _id: user._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -102,18 +102,18 @@ module.exports.updateAvatar = (req, res) => {
     { new: true, runValidators: true, upsert: true },
   )
     .then((user) => {
-      if (user) {
-        return res.send({
-          name: user.name,
-          about: user.about,
-          avatar: user.avatar,
-          _id: user._id,
-        });
-      } else {
-        return res
+      if (!user) {
+        res
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: 'Пользователь с указанным _id не найден.' });
+        return;
       }
+      res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        _id: user._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
