@@ -73,28 +73,25 @@ module.exports.deleteCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-  Card.findById(req.params.cardId)
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { new: true, runValidators: true },
+  )
     .orFail(() => {
       const err = new Error();
       err.name = 'NotValidID';
       throw err;
     })
+    .populate(['owner', 'likes'])
     .then((card) => {
-      Card.findByIdAndUpdate(
-        card,
-        { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-        { new: true, runValidators: true },
-      )
-        .populate(['owner', 'likes'])
-        .then(() => {
-          res.send({
-            name: card.name,
-            link: card.link,
-            owner: card.owner,
-            _id: card._id,
-            likes: card.likes,
-          });
-        });
+      res.send({
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+        _id: card._id,
+        likes: card.likes,
+      });
     })
     .catch((err) => {
       if (err.name === 'NotValidID') {
