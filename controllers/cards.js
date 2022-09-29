@@ -20,13 +20,7 @@ module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => {
-      res.send({
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-        _id: card._id,
-        createdAt: card.createdAt,
-      });
+      res.send({ card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -40,21 +34,19 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findById(req.params.cardId)
+  Card.findOneAndDelete(req.params.cardId)
     .orFail(() => {
       const err = new Error();
       err.name = 'NotValidID';
       throw err;
     })
     .then((card) => {
-      Card.findOneAndDelete(card).then(() => {
-        res.send({
-          name: card.name,
-          link: card.link,
-          owner: card.owner,
-          _id: card._id,
-          likes: card.likes,
-        });
+      res.send({
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+        _id: card._id,
+        likes: card.likes,
       });
     })
     .catch((err) => {
