@@ -34,7 +34,7 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findOneAndDelete(req.params.cardId)
+  Card.findByIdAndDelete(req.params.cardId)
     .orFail(() => {
       const err = new Error();
       err.name = 'NotValidID';
