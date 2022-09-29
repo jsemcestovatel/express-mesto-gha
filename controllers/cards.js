@@ -107,29 +107,27 @@ module.exports.likeCard = (req, res) => {
       return res.status(ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
     });
 };
+
 module.exports.dislikeCard = (req, res) => {
-  Card.findById(req.params.cardId)
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } }, // изъять _id из массива, если он там есть
+    { new: true, runValidators: true },
+  )
     .orFail(() => {
       const err = new Error();
       err.name = 'NotValidID';
       throw err;
     })
+    .populate(['owner', 'likes'])
     .then((card) => {
-      Card.findByIdAndUpdate(
-        card,
-        { $pull: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-        { new: true, runValidators: true },
-      )
-        .populate(['owner', 'likes'])
-        .then(() => {
-          res.send({
-            name: card.name,
-            link: card.link,
-            owner: card.owner,
-            _id: card._id,
-            likes: card.likes,
-          });
-        });
+      res.send({
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+        _id: card._id,
+        likes: card.likes,
+      });
     })
     .catch((err) => {
       if (err.name === 'NotValidID') {
