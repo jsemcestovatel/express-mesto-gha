@@ -9,6 +9,8 @@ const {
   updateAvatar,
 } = require('../controllers/users');
 
+const regularUrl = /(https?:\/\/)([www.]?[a-zA-Z0-9-]+\.)([^\s]{2,})/;
+
 router.get('/', getUsers);
 
 router.get('/me', getUserMe);
@@ -28,7 +30,7 @@ router.patch('/me', celebrate({
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().uri(),
+    avatar: Joi.string().pattern(regularUrl),
   }),
 }), updateAvatar);
 
