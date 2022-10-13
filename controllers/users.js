@@ -153,10 +153,11 @@ module.exports.getUserMe = (req, res, next) => {
         throw new NotFoundError('Пользователь не найден.');
       }
       res.send({
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        _id: user._id,
+        user,
+        // name: user.name,
+        // about: user.about,
+        // avatar: user.avatar,
+        // _id: user._id,
       });
     })
     .catch(next);
