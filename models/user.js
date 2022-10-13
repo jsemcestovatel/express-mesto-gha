@@ -1,22 +1,64 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+// const validator = require('validator');
+const isEmail = require('validator/lib/isEmail');
+
+const regularUrl = /(https?:\/\/)([www.]?[a-zA-Z0-9-]+\.)([^\s]{2,})/;
+// const regulatUrl = /\b(https?:\/\/)([\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_|]/;
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    minlength: 2,
-    maxlength: 30,
+    minlength: [2, 'От 2 до 30 символов'],
+    maxlength: [30, 'От 2 до 30 символов'],
+    default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
-    required: true,
-    minlength: 2,
-    maxlength: 30,
+    minlength: [2, 'От 2 до 30 символов'],
+    maxlength: [30, 'От 2 до 30 символов'],
+    default: 'Исследователь',
   },
   avatar: {
     type: String,
-    required: true,
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator: (v) => regularUrl.test(v),
+      message: (v) => `Некорректный формат ссылки ${v.value}`,
+    },
+  },
+  email: {
+    type: String,
+    unique: true,
+    required: [true, 'Обязательное поле'],
+    validate: {
+      validator: (v) => isEmail(v),
+      message: (v) => `Некорректный формат почты ${v.value}`,
+    },
+  },
+  password: {
+    type: String,
+    required: [true, 'Обязательное поле'],
+    select: false,
   },
 });
+
+// eslint-disable-next-line func-names
+userSchema.statics.findUserByCredentials = function (email, password) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new Error('Неправильные почта или пароль'));
+          }
+          return user;
+        });
+    });
+};
 
 module.exports = mongoose.model('user', userSchema);
