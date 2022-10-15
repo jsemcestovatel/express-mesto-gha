@@ -21,12 +21,7 @@ module.exports.getUserById = (req, res, next) => {
       if (!user) {
         throw new NotFoundError('Пользователь с указанным _id не найден.');
       }
-      res.send({
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        _id: user._id,
-      });
+      res.send({ user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -38,14 +33,18 @@ module.exports.getUserById = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  // eslint-disable-next-line object-curly-newline
-  const { name, about, avatar, email, password } = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
   bcrypt
     .hash(password, 10)
-    .then((hash) => User.create(
-      // eslint-disable-next-line comma-dangle, object-curly-newline
-      { name, about, avatar, email, password: hash, },
-    ))
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((user) => {
       res.send({
         _id: user._id,
@@ -56,7 +55,6 @@ module.exports.createUser = (req, res, next) => {
       });
     })
     .catch((err) => {
-      // console.log(err.code);
       if (err.code === 11000) {
         next(new ConflictError('Пользователь с таким email уже существует.'));
         return;
@@ -123,18 +121,25 @@ module.exports.updateAvatar = (req, res, next) => {
     });
 };
 
+module.exports.getUserMe = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь не найден.');
+      }
+      res.send({ user });
+    })
+    .catch(next);
+};
+
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        'testkey',
-        {
-          expiresIn: '7d',
-        },
-      );
+      const token = jwt.sign({ _id: user._id }, 'testkey', {
+        expiresIn: '7d',
+      });
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
@@ -146,19 +151,6 @@ module.exports.login = (req, res, next) => {
     });
 };
 
-module.exports.getUserMe = (req, res, next) => {
-  User.findById(req.user._id)
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь не найден.');
-      }
-      res.send({
-        user,
-        // name: user.name,
-        // about: user.about,
-        // avatar: user.avatar,
-        // _id: user._id,
-      });
-    })
-    .catch(next);
+module.exports.logout = (req, res) => {
+  res.clearCookie('jwt').send({ message: 'Выход' });
 };
