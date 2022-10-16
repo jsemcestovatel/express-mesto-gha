@@ -1,5 +1,4 @@
-const router = require('express').Router();
-const { celebrate, Joi, errors } = require('celebrate');
+const { celebrate, Joi } = require('celebrate');
 
 const regularUrl = /(https?:\/\/)([www.]?[a-zA-Z0-9-]+\.)([^\s]{2,})/;
 
@@ -19,6 +18,3 @@ module.exports.validateUserBody = celebrate({
     password: Joi.string().required(),
   }),
 });
-
-// обработчик ошибок celebrate
-router.use(errors());
