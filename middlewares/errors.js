@@ -1,7 +1,6 @@
 const ERROR_CODE = 500;
 
 module.exports.handlerErrors = (err, req, res, next) => {
-  console.log(err);
   const { statusCode = ERROR_CODE, message } = err;
   res.status(statusCode).send({
     // проверяем статус и выставляем сообщение в зависимости от него
